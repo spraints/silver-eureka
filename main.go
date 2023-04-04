@@ -82,7 +82,7 @@ func mainImpl(opts options) error {
 		return fmt.Errorf("git add tick.txt: %w", err)
 	}
 
-	commitHash, err := w.Commit("tick tick!", nil)
+	commitHash, err := w.Commit("tick tick!", &git.CommitOptions{})
 	if err != nil {
 		return fmt.Errorf("git commit: %w", err)
 	}
@@ -94,7 +94,7 @@ func mainImpl(opts options) error {
 	log.Printf("created commit:\n%v", commit)
 
 	log.Print("pushing")
-	if err := r.Push(nil); err != nil {
+	if err := r.Push(&git.PushOptions{}); err != nil {
 		return fmt.Errorf("git push: %w", err)
 	}
 
