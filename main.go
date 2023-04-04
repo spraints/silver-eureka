@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -45,17 +46,58 @@ func mainImpl(opts options) error {
 		return fmt.Errorf("clone error: %w", err)
 	}
 
+	start, err := r.ResolveRevision(plumbing.Revision("origin/" + opts.Branch))
+	if err != nil {
+		if err != plumbing.ErrReferenceNotFound {
+			return fmt.Errorf("error getting %s: %w", opts.Branch, err)
+		}
+		head, err := r.Head()
+		if err != nil {
+			return fmt.Errorf("error getting HEAD: %w", err)
+		}
+		hh := head.Hash()
+		start = &hh
+	}
+
 	w, err := r.Worktree()
 	if err != nil {
 		return fmt.Errorf("error getting worktree: %w", err)
 	}
 
-	start, err := r.ResolveRevision(plumbing.Revision("origin/" + opts.Branch))
-	if err != nil {
-		return fmt.Errorf("error getting %s: %w", opts.Branch, err)
+	log.Printf("creating branch %s from %s", opts.Branch, start)
+	if err := w.Checkout(&git.CheckoutOptions{
+		Hash:   *start,
+		Branch: plumbing.ReferenceName(opts.Branch),
+		Create: true,
+	}); err != nil {
+		return fmt.Errorf("error creating branch: %w", err)
 	}
 
-	log.Printf("todo... %v %v", start, w)
+	newfile := filepath.Join(repoPath, "tick.txt")
+	if err := os.WriteFile(newfile, []byte(fmt.Sprintf("%d\n", time.Now().Unix())), 0644); err != nil {
+		return fmt.Errorf("error creating tick.txt")
+	}
 
+	if _, err := w.Add("tick.txt"); err != nil {
+		return fmt.Errorf("git add tick.txt: %w", err)
+	}
+
+	commitHash, err := w.Commit("tick tick!", nil)
+	if err != nil {
+		return fmt.Errorf("git commit: %w", err)
+	}
+
+	commit, err := r.CommitObject(commitHash)
+	if err != nil {
+		return fmt.Errorf("getting new commit info: %w", err)
+	}
+	log.Printf("created commit:\n%v", commit)
+
+	log.Print("pushing")
+	if err := r.Push(nil); err != nil {
+		return fmt.Errorf("git push: %w", err)
+	}
+
+	log.Print("DONE!")
 	return nil
 }
