@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
@@ -96,14 +97,25 @@ func mainImpl(opts options) error {
 
 	log.Print("pushing")
 	if err := r.Push(&git.PushOptions{
+		RefSpecs: []config.RefSpec{
+			config.RefSpec(commitHash.String() + ":refs/heads/" + opts.Branch),
+		},
 		Auth: &http.BasicAuth{
 			Username: opts.User,
 			Password: opts.Token,
 		},
+		Progress: &progress{},
 	}); err != nil {
 		return fmt.Errorf("git push: %w", err)
 	}
 
 	log.Print("DONE!")
 	return nil
+}
+
+type progress struct{}
+
+func (progress) Write(msg []byte) (int, error) {
+	log.Printf("%s", msg)
+	return len(msg), nil
 }
