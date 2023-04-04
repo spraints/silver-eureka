@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
 func main() {
@@ -95,23 +96,14 @@ func mainImpl(opts options) error {
 
 	log.Print("pushing")
 	if err := r.Push(&git.PushOptions{
-		Auth: &authy{opts},
+		Auth: &http.BasicAuth{
+			Username: opts.User,
+			Password: opts.Token,
+		},
 	}); err != nil {
 		return fmt.Errorf("git push: %w", err)
 	}
 
 	log.Print("DONE!")
 	return nil
-}
-
-type authy struct {
-	opts options
-}
-
-func (authy) String() string {
-	return "borb"
-}
-
-func (authy) Name() string {
-	return "spraints-authy-borb"
 }
