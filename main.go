@@ -94,10 +94,24 @@ func mainImpl(opts options) error {
 	log.Printf("created commit:\n%v", commit)
 
 	log.Print("pushing")
-	if err := r.Push(&git.PushOptions{}); err != nil {
+	if err := r.Push(&git.PushOptions{
+		Auth: &authy{opts},
+	}); err != nil {
 		return fmt.Errorf("git push: %w", err)
 	}
 
 	log.Print("DONE!")
 	return nil
+}
+
+type authy struct {
+	opts options
+}
+
+func (authy) String() string {
+	return "borb"
+}
+
+func (authy) Name() string {
+	return "spraints-authy-borb"
 }
