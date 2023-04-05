@@ -116,6 +116,6 @@ func mainImpl(opts options) error {
 type progress struct{}
 
 func (progress) Write(msg []byte) (int, error) {
-	log.Printf("%s", msg)
+	log.Printf("progress: %s", msg)
 	return len(msg), nil
 }
