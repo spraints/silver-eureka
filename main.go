@@ -104,7 +104,7 @@ func mainImpl(opts options) error {
 			Username: opts.User,
 			Password: opts.Token,
 		},
-		Progress: &progress{},
+		//Progress: &progress{},
 	}); err != nil {
 		return fmt.Errorf("git push: %w", err)
 	}
