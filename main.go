@@ -15,10 +15,18 @@ import (
 
 func main() {
 	opts := options{
-		URL:    "https://github.com/spraints/silver-eureka",
-		Branch: "testing-123",
-		User:   "spraints",
-		Token:  os.Getenv("GITHUB_TOKEN"),
+		URL:          "https://github.com/spraints/silver-eureka",
+		Branch:       "testing-123",
+		User:         "spraints",
+		Token:        os.Getenv("GITHUB_TOKEN"),
+		ShowProgress: false,
+	}
+
+	for _, arg := range os.Args {
+		if arg == "-p" || arg == "--progress" {
+			log.Printf("showing progress")
+			opts.ShowProgress = true
+		}
 	}
 
 	if err := mainImpl(opts); err != nil {
@@ -27,10 +35,11 @@ func main() {
 }
 
 type options struct {
-	URL    string
-	Branch string
-	User   string
-	Token  string
+	URL          string
+	Branch       string
+	User         string
+	Token        string
+	ShowProgress bool
 }
 
 func mainImpl(opts options) error {
@@ -96,7 +105,7 @@ func mainImpl(opts options) error {
 	log.Printf("created commit:\n%v", commit)
 
 	log.Print("pushing")
-	if err := r.Push(&git.PushOptions{
+	pushOpts := &git.PushOptions{
 		RefSpecs: []config.RefSpec{
 			config.RefSpec(commitHash.String() + ":refs/heads/" + opts.Branch),
 		},
@@ -104,8 +113,11 @@ func mainImpl(opts options) error {
 			Username: opts.User,
 			Password: opts.Token,
 		},
-		//Progress: &progress{},
-	}); err != nil {
+	}
+	if opts.ShowProgress {
+		pushOpts.Progress = &progress{}
+	}
+	if err := r.Push(pushOpts); err != nil {
 		return fmt.Errorf("git push: %w", err)
 	}
 
