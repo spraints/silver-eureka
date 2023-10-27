@@ -26,8 +26,14 @@ func main() {
 		if arg == "-p" || arg == "--progress" {
 			log.Printf("showing progress")
 			opts.ShowProgress = true
+		} else if arg == "-r" || arg == "--review-lab" {
+			opts.URL = "https://spraints.review-lab.github.com/spraints/silver-eureka"
+		} else {
+			log.Fatalf("illegal arg %q", arg)
 		}
 	}
+
+	log.Printf("pushing to %v", opts.URL)
 
 	if err := mainImpl(opts); err != nil {
 		log.Fatal(err)
