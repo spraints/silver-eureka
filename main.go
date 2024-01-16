@@ -22,7 +22,7 @@ func main() {
 		ShowProgress: false,
 	}
 
-	for _, arg := range os.Args {
+	for _, arg := range os.Args[1:] {
 		if arg == "-p" || arg == "--progress" {
 			log.Printf("showing progress")
 			opts.ShowProgress = true
